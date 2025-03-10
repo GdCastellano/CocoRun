@@ -1,7 +1,8 @@
+// DetailScreen.js (fragmento actualizado)
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Share } from 'react-native';
-import MapView, { Polyline } from 'expo-maps';
-import { Ionicons } from '@expo/vector-icons'; // Import Ionicons
+import MapView, { Polyline } from 'expo-maps'; // Cambiado de react-native-maps a expo-maps
+import { Ionicons } from '@expo/vector-icons';
 
 export default function DetailScreen({ route }) {
   const { trot } = route.params;
@@ -47,6 +48,7 @@ export default function DetailScreen({ route }) {
       </View>
       <MapView
         style={styles.map}
+        provider="google" // Opcional: usa Google Maps como proveedor
         initialRegion={{
           latitude: trot.route[0].latitude,
           longitude: trot.route[0].longitude,

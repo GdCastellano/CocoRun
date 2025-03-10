@@ -1,4 +1,4 @@
-// filepath: /c:/Users/gabod/Proyectos/CocoRun/CocoRun/App.js
+// App.js (actualizado)
 import React, { useEffect } from 'react';
 import { NavigationContainer, useNavigationContainerRef, useNavigationState } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -8,7 +8,6 @@ import RecordsScreen from './screens/RecordsScreen';
 import DetailScreen from './screens/DetailScreen';
 import { Ionicons } from '@expo/vector-icons';
 import './backgroundTask'; // Import the background task
-import PushNotification from 'react-native-push-notification';
 
 const Stack = createStackNavigator();
 
@@ -45,17 +44,7 @@ export default function App() {
   const navigationRef = useNavigationContainerRef();
 
   useEffect(() => {
-    PushNotification.createChannel(
-      {
-        channelId: 'trot-channel',
-        channelName: 'Trot Channel',
-        channelDescription: 'A channel to manage trot notifications',
-        soundName: 'default',
-        importance: 4,
-        vibrate: true,
-      },
-      (created) => console.log(`createChannel returned '${created}'`)
-    );
+    // Configuración de notificaciones ya está en PushNotificationConfig.js
   }, []);
 
   return (

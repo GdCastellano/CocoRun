@@ -24,7 +24,6 @@ export const cancelTrotNotification = async () => {
   await Notifications.cancelAllScheduledNotificationsAsync();
 };
 
-// Función para manejar la acción de detener
 export const stopTrot = () => {
   console.log('Trote detenido desde notificación');
 };
