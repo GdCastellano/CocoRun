@@ -1,35 +1,35 @@
-import * as TaskManager from 'expo-task-manager';
+// backgroundTask.js
 import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const LOCATION_TASK_NAME = 'background-location-task';
-
-TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
-  if (error) {
-    console.error(error);
+export const startLocationUpdates = async () => {
+  const { status } = await Location.requestForegroundPermissionsAsync();
+  if (status !== 'granted') {
+    console.error('Permisos de ubicación no otorgados');
     return;
   }
-  if (data) {
-    const { locations } = data;
-    const newLocation = locations[0];
-    if (newLocation) {
-      const storedRoute = await AsyncStorage.getItem('currentRoute');
-      const route = storedRoute ? JSON.parse(storedRoute) : [];
-      route.push({ ...newLocation.coords, timestamp: Date.now() });
-      await AsyncStorage.setItem('currentRoute', JSON.stringify(route));
-    }
-  }
-});
-
-export const startLocationUpdates = async () => {
-  await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-    accuracy: Location.Accuracy.High,
-    timeInterval: 10000,
-    distanceInterval: 10,
-    showsBackgroundLocationIndicator: true,
-  });
+  const intervalId = setInterval(async () => {
+    const location = await Location.getCurrentPositionAsync({});
+    let currentRoute = await AsyncStorage.getItem('currentRoute');
+    currentRoute = currentRoute ? JSON.parse(currentRoute) : [];
+    currentRoute.push({
+      latitude: location.coords.latitude,
+      longitude: location.coords.longitude,
+    });
+    await AsyncStorage.setItem('currentRoute', JSON.stringify(currentRoute));
+    console.log('Ubicación registrada:', {
+      latitude: location.coords.latitude,
+      longitude: location.coords.longitude,
+    });
+  }, 5000); // Registra cada 5 segundos
+  await AsyncStorage.setItem('locationIntervalId', intervalId.toString());
 };
 
 export const stopLocationUpdates = async () => {
-  await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+  const intervalId = await AsyncStorage.getItem('locationIntervalId');
+  if (intervalId) {
+    clearInterval(parseInt(intervalId));
+    await AsyncStorage.removeItem('locationIntervalId');
+    console.log('Deteniendo actualización de ubicación');
+  }
 };

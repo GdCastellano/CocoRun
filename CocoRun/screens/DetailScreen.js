@@ -1,130 +1,77 @@
-// DetailScreen.js (fragmento actualizado)
+// DetailScreen.js
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Share } from 'react-native';
-import MapView, { Polyline } from 'expo-maps'; // Cambiado de react-native-maps a expo-maps
-import { Ionicons } from '@expo/vector-icons';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import MapView, { Polyline } from 'react-native-maps';
 
-export default function DetailScreen({ route }) {
-  const { trot } = route.params;
+export default function DetailScreen({ route: navigationRoute }) {
+  const { trot } = navigationRoute.params || {};
+  const { date, time, distance, pace, speed, route } = trot || {};
 
-  const formatNumber = (num) => (num != null ? num.toFixed(2) : 'N/A');
+  // Filtrar puntos válidos de la ruta
+  const validRoute = Array.isArray(route)
+    ? route.filter(point => point && typeof point.latitude === 'number' && typeof point.longitude === 'number')
+    : [];
+  console.log('Ruta en DetailScreen:', validRoute);
 
-  const formatTime = (time) => {
-    const hours = Math.floor(time / 60);
-    const minutes = Math.floor(time % 60);
-    const seconds = Math.round((time - Math.floor(time)) * 60);
-    return hours > 0 ? `${hours}h ${minutes}m ${seconds}s` : `${minutes}m ${seconds}s`;
+  // Formatear el tiempo
+  const formatTime = (minutes) => {
+    if (!minutes || isNaN(minutes)) return '0 min';
+    const totalSeconds = Math.round(minutes * 60);
+    const hours = Math.floor(totalSeconds / 3600);
+    const mins = Math.floor((totalSeconds % 3600) / 60);
+    const secs = totalSeconds % 60;
+    return `${hours > 0 ? hours + ' h ' : ''}${mins} min ${secs} s`;
   };
 
+  // Formatear el ritmo
   const formatPace = (pace) => {
-    const minutes = Math.floor(pace);
-    const seconds = Math.round((pace - minutes) * 60);
-    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds} min/km`;
+    if (!pace || isNaN(pace)) return '0 min/km';
+    const mins = Math.floor(pace);
+    const secs = Math.round((pace - mins) * 60);
+    return `${mins} min ${secs} s / km`;
   };
 
-  const onShare = async () => {
-    try {
-      await Share.share({
-        message: `Trote del ${trot.date}: ${formatNumber(trot.time)} min, ${formatNumber(trot.distance)} km, ritmo: ${formatNumber(trot.pace)} min/km, velocidad: ${formatNumber(trot.speed)} km/h`,
-      });
-    } catch (error) {
-      alert(error.message);
-    }
-  };
+  // Región inicial para el mapa
+  const initialRegion = validRoute.length > 0
+    ? {
+        latitude: validRoute[0].latitude,
+        longitude: validRoute[0].longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      }
+    : {
+        latitude: -33.4489, // Coordenadas por defecto (Santiago, Chile)
+        longitude: -70.6693,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <Text style={styles.title}>Detalles del Trote</Text>
-      <View style={styles.card}>
-        <Text style={styles.text}>Fecha: {trot.date}</Text>
-        <Text style={styles.text}>Tiempo: {formatTime(trot.time)}</Text>
-        <Text style={styles.text}>Distancia: {trot.distance.toFixed(2)} km</Text>
-        <Text style={styles.text}>Ritmo: {formatPace(trot.pace)}</Text>
-        <Text style={styles.text}>Velocidad: {trot.speed.toFixed(2)} km/h</Text>
-        <Text style={styles.text}>Intervalos (5 min):</Text>
-        {trot.intervalDistance && trot.intervalDistance.map((dist, index) => (
-          <Text key={index} style={styles.text}>Intervalo {index + 1}: {dist.toFixed(2)} km</Text>
-        ))}
-      </View>
-      <MapView
-        style={styles.map}
-        provider="google" // Opcional: usa Google Maps como proveedor
-        initialRegion={{
-          latitude: trot.route[0].latitude,
-          longitude: trot.route[0].longitude,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        }}
-      >
-        <Polyline coordinates={trot.route} strokeWidth={3} strokeColor="#FF6B6B" />
-      </MapView>
-      <TouchableOpacity style={styles.shareButton} onPress={onShare}>
-        <Ionicons name="logo-whatsapp" size={20} color="#FFFFFF" />
-        <Text style={styles.shareButtonText}>Compartir por WhatsApp</Text>
-      </TouchableOpacity>
-    </View>
+      <Text style={styles.detail}>Fecha: {date || 'No disponible'}</Text>
+      <Text style={styles.detail}>Tiempo: {formatTime(time)}</Text>
+      <Text style={styles.detail}>Distancia: {(distance || 0).toFixed(2)} km</Text>
+      <Text style={styles.detail}>Ritmo: {formatPace(pace)}</Text>
+      <Text style={styles.detail}>Velocidad: {(speed || 0).toFixed(2)} km/h</Text>
+
+      <Text style={styles.sectionTitle}>Ruta:</Text>
+      {validRoute.length > 0 ? (
+        <MapView style={styles.map} initialRegion={initialRegion}>
+          <Polyline coordinates={validRoute} strokeColor="#FF6B6B" strokeWidth={3} />
+        </MapView>
+      ) : (
+        <Text style={styles.noData}>No hay datos de ruta disponibles</Text>
+      )}
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: '#F5F7FA',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: 'black',
-    textAlign: 'center',
-    marginBottom: 20,
-    marginTop: 30,
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 5,
-  },
-  text: {
-    fontSize: 16,
-    color: '#333',
-    marginVertical: 5,
-  },
-  map: {
-    width: '100%',
-    height: 300,
-    borderRadius: 10,
-    overflow: 'hidden',
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 5,
-  },
-  shareButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#4ECDC4',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 25,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    elevation: 5,
-  },
-  shareButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    marginLeft: 10,
-  },
+  container: { flex: 1, padding: 20, backgroundColor: '#F5F7FA' },
+  title: { fontSize: 28, fontWeight: 'bold', color: '#FF6B6B', marginBottom: 20, textAlign: 'center' },
+  sectionTitle: { fontSize: 20, fontWeight: 'bold', color: '#333', marginVertical: 10 },
+  detail: { fontSize: 18, color: '#2E7D32', marginVertical: 5 },
+  map: { height: 300, marginVertical: 10 },
+  noData: { fontSize: 16, color: '#666', textAlign: 'center', marginVertical: 10 },
 });

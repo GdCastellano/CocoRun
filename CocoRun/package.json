@@ -19,7 +19,7 @@
     "expo-maps": "^0.7.3",
     "expo-notifications": "~0.29.13",
     "expo-status-bar": "~2.0.1",
-    "expo-system-ui": "^4.0.8",
+    "expo-system-ui": "~4.0.8",
     "expo-task-manager": "~12.0.5",
     "patch-package": "^8.0.0",
     "postinstall-postinstall": "^2.1.0",
@@ -27,10 +27,12 @@
     "react-native": "0.76.7",
     "react-native-gesture-handler": "~2.20.2",
     "react-native-maps": "1.18.0",
-    "react-native-vector-icons": "^10.2.0"
+    "react-native-vector-icons": "^10.2.0",
+    "@expo/vector-icons": "^14.0.2",
+    "expo-sensors": "~14.0.2"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0"
+    "@babel/core": "^7.25.2"
   },
   "private": true
 }
